@@ -1,15 +1,15 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
-import { AuthContext } from '../App.jsx';
-import '../index.css'
+import { useAuth } from '../context/AuthContext'; // ✅ Use the hook
+import '../index.css';
 
 export default function Login() {
-  const { setAuth } = useContext(AuthContext);
+  const { setAuth } = useAuth(); // ✅ Use hook to access context
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const submit = async e => {
+  const submit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -35,7 +35,7 @@ export default function Login() {
           type="text"
           placeholder="Username"
           value={form.username}
-          onChange={e => setForm({ ...form, username: e.target.value })}
+          onChange={(e) => setForm({ ...form, username: e.target.value })}
           className="w-full border border-gray-300 p-3 mb-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
           required
         />
@@ -43,19 +43,23 @@ export default function Login() {
           type="password"
           placeholder="Password"
           value={form.password}
-          onChange={e => setForm({ ...form, password: e.target.value })}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
           className="w-full border border-gray-300 p-3 mb-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
           required
         />
-        <button 
-          type="submit" 
-          className={`bg-blue-600 text-white font-semibold px-4 py-2 rounded hover:bg-blue-700 w-full transition duration-200 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        <button
+          type="submit"
+          className={`bg-blue-600 text-white font-semibold px-4 py-2 rounded hover:bg-blue-700 w-full transition duration-200 ${
+            loading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
           disabled={loading}
         >
           {loading ? 'Logging In...' : 'Log In'}
         </button>
         <p className="mt-4 text-center">
-          <a href="/forgot-password" className="text-blue-600 hover:underline">Forgot Password?</a>
+          <a href="/forgot-password" className="text-blue-600 hover:underline">
+            Forgot Password?
+          </a>
         </p>
       </form>
     </div>

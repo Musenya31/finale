@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { AuthContext } from '../App';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { BellIcon } from '@heroicons/react/24/outline';
 
 export default function Header() {
-  const { auth, logout } = useContext(AuthContext);
+  const { auth, logout } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
 
@@ -18,14 +18,18 @@ export default function Header() {
     try {
       const res = await axios.get('http://localhost:5000/api/notifications');
       setNotifications(res.data);
-    } catch {}
+    } catch {
+      // handle error if needed
+    }
   };
 
   const markRead = async (id) => {
     try {
       await axios.put(`http://localhost:5000/api/notifications/${id}/read`);
       setNotifications(notifications.filter((n) => n._id !== id));
-    } catch {}
+    } catch {
+      // handle error if needed
+    }
   };
 
   return (
