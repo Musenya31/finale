@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext'; // ✅ Use the hook
+import { AuthContext } from '../context/AuthContext';
 import '../index.css';
 
 export default function Login() {
-  const { setAuth } = useAuth(); // ✅ Use hook to access context
+  const { setAuth } = useContext(AuthContext);
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -35,32 +35,25 @@ export default function Login() {
           type="text"
           placeholder="Username"
           value={form.username}
-          onChange={(e) => setForm({ ...form, username: e.target.value })}
-          className="w-full border border-gray-300 p-3 mb-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+          onChange={e => setForm({ ...form, username: e.target.value })}
+          className="w-full border p-3 mb-4 rounded"
           required
         />
         <input
           type="password"
           placeholder="Password"
           value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          className="w-full border border-gray-300 p-3 mb-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+          onChange={e => setForm({ ...form, password: e.target.value })}
+          className="w-full border p-3 mb-6 rounded"
           required
         />
-        <button
-          type="submit"
-          className={`bg-blue-600 text-white font-semibold px-4 py-2 rounded hover:bg-blue-700 w-full transition duration-200 ${
-            loading ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
+        <button 
+          type="submit" 
+          className={`bg-blue-600 text-white w-full py-2 rounded ${loading ? 'opacity-50' : ''}`}
           disabled={loading}
         >
           {loading ? 'Logging In...' : 'Log In'}
         </button>
-        <p className="mt-4 text-center">
-          <a href="/forgot-password" className="text-blue-600 hover:underline">
-            Forgot Password?
-          </a>
-        </p>
       </form>
     </div>
   );

@@ -1,15 +1,18 @@
+// routes/auth.js
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../model/User.js';
 import dotenv from 'dotenv';
-dotenv.config();
 
+dotenv.config();
 const router = express.Router();
 
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ message: 'Missing fields' });
+  if (!username || !password) {
+    return res.status(400).json({ message: 'Missing fields' });
+  }
 
   try {
     const user = await User.findOne({ username });
@@ -25,7 +28,8 @@ router.post('/login', async (req, res) => {
     );
 
     res.json({ token, name: user.name, role: user.role });
-  } catch {
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 });

@@ -1,60 +1,126 @@
 import Shift from '../model/Shift.js';
 
+// Nurse: Get only their upcoming shifts
 export const getShifts = async (req, res) => {
   try {
-    const shifts = await Shift.find().populate('nurse', 'name nurseId');
-    res.json(shifts);
-  } catch (err) {
+    const userId = req.user.id;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const shifts = await Shift.find({
+      nurse: userId,
+      date: { $gte: today }
+    }).populate('nurse', 'name');
+
+    res.status(200).json(shifts);
+  } catch (error) {
+    console.error('Error fetching nurse shifts:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-export const createShift = async (req, res) => {
-  const { nurse, date, shiftType } = req.body;
-  if (!nurse || !date || !shiftType) {
-    return res.status(400).json({ message: 'Missing fields' });
-  }
-
+// Admin: Get all upcoming shifts with nurse names
+export const getAllShiftsForAdmin = async (req, res) => {
   try {
-    const existing = await Shift.findOne({ nurse, date });
-    if (existing) return res.status(409).json({ message: 'Shift already exists for this nurse on this date' });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    const newShift = new Shift({ nurse, date, shiftType });
-    await newShift.save();
-    res.status(201).json(newShift);
-  } catch (err) {
+    const shifts = await Shift.find({
+      date: { $gte: today }
+    }).populate('nurse', 'name');
+
+    res.status(200).json(shifts);
+  } catch (error) {
+    console.error('Error fetching all shifts:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
+// Create shift
+export const createShift = async (req, res) => {
+  try {
+    const { date, shiftType, startTime, endTime } = req.body;
+
+    const newShift = new Shift({
+      nurse: req.user.id,
+      date,
+      shiftType,
+      startTime,
+      endTime,
+    });
+
+    const savedShift = await newShift.save();
+    const populatedShift = await Shift.findById(savedShift._id).populate('nurse', 'name');
+
+    res.status(201).json(populatedShift);
+  } catch (err) {
+    console.error('Error creating shift:', err);
+    res.status(500).json({ message: 'Failed to create shift' });
+  }
+};
+
+// Update shift
 export const updateShift = async (req, res) => {
   try {
-    const shift = await Shift.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(shift);
+    const updatedShift = await Shift.findOneAndUpdate(
+      { _id: req.params.id, nurse: req.user.id },
+      req.body,
+      { new: true }
+    ).populate('nurse', 'name');
+
+    if (!updatedShift) {
+      return res.status(404).json({ message: 'Shift not found or unauthorized' });
+    }
+
+    res.status(200).json(updatedShift);
   } catch (err) {
-    res.status(400).json({ message: 'Invalid update' });
+    console.error('Error updating shift:', err);
+    res.status(500).json({ message: 'Update failed' });
   }
 };
 
+// Delete shift
 export const deleteShift = async (req, res) => {
   try {
-    await Shift.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Shift deleted' });
+    const deleted = await Shift.findOneAndDelete({
+      _id: req.params.id,
+      nurse: req.user.id,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ message: 'Shift not found or unauthorized' });
+    }
+
+    res.status(200).json({ message: 'Shift deleted successfully' });
   } catch (err) {
-    res.status(400).json({ message: 'Delete failed' });
+    console.error('Error deleting shift:', err);
+    res.status(500).json({ message: 'Delete failed' });
   }
 };
 
+// Add comment
 export const addComment = async (req, res) => {
-  const { comment, author } = req.body;
   try {
     const shift = await Shift.findById(req.params.id);
-    if (!shift) return res.status(404).json({ message: 'Shift not found' });
+    if (!shift) {
+      return res.status(404).json({ message: 'Shift not found' });
+    }
 
-    shift.comments.push({ author, comment });
+    const comment = {
+      author: req.user.id,
+      comment: req.body.comment,
+    };
+
+    shift.comments.push(comment);
     await shift.save();
-    res.json(shift);
+
+    const populatedShift = await Shift.findById(shift._id)
+      .populate('nurse', 'name')
+      .populate('comments.author', 'name');
+
+    res.status(200).json(populatedShift);
   } catch (err) {
-    res.status(500).json({ message: 'Comment failed' });
+    console.error('Error adding comment:', err);
+    res.status(500).json({ message: 'Could not add comment' });
   }
 };

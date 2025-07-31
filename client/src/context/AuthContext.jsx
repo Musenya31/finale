@@ -36,3 +36,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext); // ✅ Export the hook
+export { AuthContext }; // ✅ Export both context and provider
